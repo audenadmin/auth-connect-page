@@ -1,0 +1,118 @@
+# =============================================================================
+# Auden Auth/Connect Page - Deploy to S3 + CloudFront
+# =============================================================================
+#
+# Deploys the auth page to both auth.auden.app and connect.auden.app
+#
+# Triggers:
+# - Push to master branch
+# - Manual workflow dispatch
+#
+# Required GitHub Secrets:
+# - AWS_ACCESS_KEY_ID: AWS access key with S3 and CloudFront permissions
+# - AWS_SECRET_ACCESS_KEY: AWS secret key
+#
+# =============================================================================
+
+name: Deploy Auth Pages
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'index.html'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Deployment target'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - auth
+          - connect
+
+env:
+  AWS_REGION: 'us-east-1'
+  AUTH_BUCKET: 'auden-auth-page'
+  CONNECT_BUCKET: 'auden-connect-page'
+  AUTH_DISTRIBUTION: 'E28HU0FGXNYX2G'
+  CONNECT_DISTRIBUTION: 'E5U1N58CFXWL1'
+
+jobs:
+  deploy:
+    name: Deploy to S3 + CloudFront
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Determine deployment target
+        id: target
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TARGET="${{ github.event.inputs.target }}"
+          else
+            TARGET="all"
+          fi
+          echo "target=$TARGET" >> $GITHUB_OUTPUT
+          echo "Deploying to: $TARGET"
+
+      - name: Deploy to auth.auden.app
+        if: steps.target.outputs.target == 'all' || steps.target.outputs.target == 'auth'
+        run: |
+          echo "Uploading to s3://${{ env.AUTH_BUCKET }}/"
+          aws s3 cp index.html "s3://${{ env.AUTH_BUCKET }}/index.html" \
+            --content-type "text/html" \
+            --cache-control "max-age=300, s-maxage=86400"
+          echo "Upload complete"
+
+      - name: Deploy to connect.auden.app
+        if: steps.target.outputs.target == 'all' || steps.target.outputs.target == 'connect'
+        run: |
+          echo "Uploading to s3://${{ env.CONNECT_BUCKET }}/"
+          aws s3 cp index.html "s3://${{ env.CONNECT_BUCKET }}/index.html" \
+            --content-type "text/html" \
+            --cache-control "max-age=300, s-maxage=86400"
+          echo "Upload complete"
+
+      - name: Invalidate CloudFront (auth.auden.app)
+        if: steps.target.outputs.target == 'all' || steps.target.outputs.target == 'auth'
+        run: |
+          echo "Invalidating CloudFront distribution ${{ env.AUTH_DISTRIBUTION }}"
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ env.AUTH_DISTRIBUTION }}" \
+            --paths "/*"
+          echo "Invalidation created"
+
+      - name: Invalidate CloudFront (connect.auden.app)
+        if: steps.target.outputs.target == 'all' || steps.target.outputs.target == 'connect'
+        run: |
+          echo "Invalidating CloudFront distribution ${{ env.CONNECT_DISTRIBUTION }}"
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ env.CONNECT_DISTRIBUTION }}" \
+            --paths "/*"
+          echo "Invalidation created"
+
+      - name: Summary
+        run: |
+          echo "## Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Site | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.target.outputs.target }}" = "all" ] || [ "${{ steps.target.outputs.target }}" = "auth" ]; then
+            echo "| [auth.auden.app](https://auth.auden.app) | Deployed |" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "${{ steps.target.outputs.target }}" = "all" ] || [ "${{ steps.target.outputs.target }}" = "connect" ]; then
+            echo "| [connect.auden.app](https://connect.auden.app) | Deployed |" >> $GITHUB_STEP_SUMMARY
+          fi
