@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auden</title>
+
+  <!-- Security Headers -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://auden-email-assets.s3.us-east-1.amazonaws.com; connect-src 'none'; frame-ancestors 'none';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2307080A' stroke='white' stroke-width='3'/><text x='50' y='68' text-anchor='middle' fill='white' font-family='system-ui' font-size='50' font-weight='600'>A</text></svg>">
+
+  <style>
+    /* ========================================
+       CSS Reset & Base
+       ======================================== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+      background-color: #07080A;
+      color: #FFFFFF;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ========================================
+       Logo Container with Radiating Circles
+       ======================================== */
+    .logo-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 40px;
+    }
+
+    /* Decorative circles radiating from logo (matching LoginScreen.tsx exactly) */
+    .radiating-circles {
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .radiating-circles .circle {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      border: 1px solid;
+    }
+
+    /* Exact sizes and opacities from LoginScreen.tsx */
+    .radiating-circles .circle:nth-child(1) { width: 200px; height: 200px; border-color: rgba(255, 255, 255, 0.1); }
+    .radiating-circles .circle:nth-child(2) { width: 400px; height: 400px; border-color: rgba(255, 255, 255, 0.07); }
+    .radiating-circles .circle:nth-child(3) { width: 600px; height: 600px; border-color: rgba(255, 255, 255, 0.05); }
+    .radiating-circles .circle:nth-child(4) { width: 800px; height: 800px; border-color: rgba(255, 255, 255, 0.03); }
+
+    /* Error state circles */
+    body.error .radiating-circles .circle {
+      border-color: rgba(239, 68, 68, 0.08);
+    }
+
+    /* ========================================
+       Main Container
+       ======================================== */
+    .container {
+      text-align: center;
+      max-width: 420px;
+      padding: 40px 24px;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* ========================================
+       Logo
+       ======================================== */
+    .logo {
+      position: relative;
+      z-index: 10;
+      width: 64px;
+      height: 64px;
+    }
+
+    .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* ========================================
+       Typography
+       ======================================== */
+    h1 {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+      color: #FFFFFF;
+    }
+
+    body.error h1 {
+      color: #ef4444;
+    }
+
+    .message {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    /* ========================================
+       Spinner
+       ======================================== */
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-top-color: #FFFFFF;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 24px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .spinner.hidden {
+      display: none;
+    }
+
+    /* ========================================
+       Buttons
+       ======================================== */
+    .button {
+      display: inline-block;
+      padding: 16px 48px;
+      background-color: #FFFFFF;
+      color: #07080A;
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 100px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: none;
+      min-width: 200px;
+    }
+
+    .button:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .button:active {
+      transform: translateY(0);
+    }
+
+    .button.error {
+      background-color: #ef4444;
+      color: #FFFFFF;
+    }
+
+    .button.secondary {
+      background-color: transparent;
+      color: rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 12px 32px;
+      font-size: 14px;
+      min-width: auto;
+    }
+
+    .button.secondary:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+      color: #FFFFFF;
+    }
+
+    /* ========================================
+       Status Text
+       ======================================== */
+    .status {
+      margin-top: 24px;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.4);
+      min-height: 20px;
+    }
+
+    /* ========================================
+       Mobile Responsive
+       ======================================== */
+    @media (max-width: 480px) {
+      .container {
+        padding: 32px 20px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      .message {
+        font-size: 15px;
+      }
+
+      .button {
+        padding: 14px 36px;
+        font-size: 15px;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Main Content Container -->
+  <div class="container">
+    <!-- Logo with Radiating Circles (matching LoginScreen.tsx) -->
+    <div class="logo-container" id="logo-container">
+      <!-- Decorative circles radiating from logo -->
+      <div class="radiating-circles">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+      </div>
+      <!-- Logo -->
+      <div class="logo">
+        <img src="https://auden-email-assets.s3.us-east-1.amazonaws.com/logo-s.svg" alt="Auden" id="logo-img">
+      </div>
+    </div>
+
+    <!-- Title -->
+    <h1 id="title">Loading...</h1>
+
+    <!-- Message -->
+    <p class="message" id="message"></p>
+
+    <!-- Spinner (shown during redirect) -->
+    <div class="spinner hidden" id="spinner"></div>
+
+    <!-- Primary Action Button -->
+    <a href="#" class="button" id="primary-btn" style="display: none;">Open Auden</a>
+
+    <!-- Status Text -->
+    <p class="status" id="status"></p>
+
+  </div>
+
+  <script>
+    /* ========================================
+       Configuration
+       ======================================== */
+    const CONFIG = {
+      deepLinkScheme: 'auden',
+      mainSiteUrl: 'https://auden.app',
+      redirectDelay: 800,      // ms before auto-redirect
+      allowedAuthDomains: ['auth.auden.app', 'localhost', '127.0.0.1'],
+      allowedConnectDomains: ['connect.auden.app', 'localhost', '127.0.0.1'],
+    };
+
+    /* ========================================
+       Configuration for logo URL
+       ======================================== */
+    const LOGO_URL = 'https://auden-email-assets.s3.us-east-1.amazonaws.com/logo-s.svg';
+
+    /* ========================================
+       OAuth Error Messages
+       ======================================== */
+    const OAUTH_ERRORS = {
+      'access_denied': 'You cancelled the authorization. Please try again if this was a mistake.',
+      'invalid_request': 'The authorization request was invalid. Please try again.',
+      'unauthorized_client': 'This application is not authorized. Please contact support.',
+      'unsupported_response_type': 'Authorization configuration error. Please contact support.',
+      'server_error': 'The authorization server encountered an error. Please try again.',
+      'temporarily_unavailable': 'The service is temporarily unavailable. Please try again later.',
+      'invalid_scope': 'The requested permissions are invalid. Please contact support.',
+      'login_required': 'Please sign in to continue.',
+      'consent_required': 'Your consent is required to continue.',
+      'interaction_required': 'Additional interaction is required. Please try again.',
+    };
+
+    /* ========================================
+       Validation Functions
+       ======================================== */
+    function validateToken(token) {
+      if (!token) {
+        return { valid: false, error: 'Missing token', code: 'MISSING_TOKEN' };
+      }
+      // UUID or hex token: 32-128 chars, alphanumeric with hyphens/underscores
+      if (!/^[a-zA-Z0-9\-_]{32,128}$/.test(token)) {
+        return { valid: false, error: 'Invalid token format', code: 'INVALID_TOKEN' };
+      }
+      return { valid: true, token };
+    }
+
+    function validateOAuthParams(params) {
+      const code = params.get('code');
+      const state = params.get('state');
+      const error = params.get('error');
+      const errorDescription = params.get('error_description');
+
+      // Error case is valid (OAuth provider returned error)
+      if (error) {
+        return {
+          valid: true,
+          isError: true,
+          error: error,
+          errorDescription: errorDescription || OAUTH_ERRORS[error] || 'Authorization failed. Please try again.',
+        };
+      }
+
+      // Success case requires code and state
+      if (!code) {
+        return { valid: false, error: 'Missing authorization code', code: 'MISSING_CODE' };
+      }
+
+      if (!state) {
+        return { valid: false, error: 'Missing state parameter', code: 'MISSING_STATE' };
+      }
+
+      // Validate code format (OAuth codes can be quite varied)
+      if (code.length < 10 || code.length > 2048) {
+        return { valid: false, error: 'Invalid authorization code', code: 'INVALID_CODE' };
+      }
+
+      // Validate state format (should be our UUID-based state)
+      if (!/^[a-zA-Z0-9\-_]{16,128}$/.test(state)) {
+        return { valid: false, error: 'Invalid state parameter', code: 'INVALID_STATE' };
+      }
+
+      return { valid: true, code, state };
+    }
+
+    function validateProvider(provider) {
+      const validProviders = ['google', 'microsoft'];
+      if (!validProviders.includes(provider)) {
+        return { valid: false, error: 'Invalid provider', code: 'INVALID_PROVIDER' };
+      }
+      return { valid: true, provider };
+    }
+
+    /* ========================================
+       Deep Link Builders
+       ======================================== */
+    function buildMagicLinkDeepLink(token) {
+      return `${CONFIG.deepLinkScheme}://auth/callback?token=${encodeURIComponent(token)}&type=magic`;
+    }
+
+    function buildLoginOAuthDeepLink(provider, code, state) {
+      return `${CONFIG.deepLinkScheme}://auth/oauth/callback?provider=${provider}&code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
+    }
+
+    function buildLoginOAuthErrorDeepLink(provider, error, errorDescription) {
+      let url = `${CONFIG.deepLinkScheme}://auth/oauth/callback?provider=${provider}&error=${encodeURIComponent(error)}`;
+      if (errorDescription) {
+        url += `&error_description=${encodeURIComponent(errorDescription)}`;
+      }
+      return url;
+    }
+
+    function buildCalendarOAuthDeepLink(provider, code, state) {
+      return `${CONFIG.deepLinkScheme}://oauth/${provider}/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
+    }
+
+    function buildCalendarOAuthErrorDeepLink(provider, error, errorDescription) {
+      let url = `${CONFIG.deepLinkScheme}://oauth/${provider}/callback?error=${encodeURIComponent(error)}`;
+      if (errorDescription) {
+        url += `&error_description=${encodeURIComponent(errorDescription)}`;
+      }
+      return url;
+    }
+
+    /* ========================================
+       UI Rendering
+       ======================================== */
+    function renderUI(options) {
+      const {
+        title = 'Auden',
+        message = '',
+        buttonText = 'Open Auden',
+        buttonUrl = '#',
+        buttonClass = '',
+        showSpinner = false,
+        statusText = '',
+        isError = false,
+      } = options;
+
+      // Set body error class (affects circle colors)
+      document.body.classList.toggle('error', isError);
+
+      // Set title
+      document.getElementById('title').textContent = title;
+
+      // Set message
+      document.getElementById('message').textContent = message;
+
+      // Set spinner
+      const spinner = document.getElementById('spinner');
+      spinner.classList.toggle('hidden', !showSpinner);
+
+      // Set button
+      const btn = document.getElementById('primary-btn');
+      btn.textContent = buttonText;
+      btn.href = buttonUrl;
+      btn.className = 'button' + (buttonClass ? ' ' + buttonClass : '');
+      btn.style.display = 'inline-block';
+
+      // Set status
+      document.getElementById('status').textContent = statusText;
+
+      // Update page title
+      document.title = title + ' - Auden';
+    }
+
+    /* ========================================
+       Deep Link Execution
+       ======================================== */
+    function attemptDeepLink(deepLinkUrl) {
+      // Update status
+      document.getElementById('status').textContent = 'Opening Auden...';
+      document.getElementById('spinner').classList.remove('hidden');
+
+      // Attempt deep link after short delay
+      setTimeout(() => {
+        window.location.href = deepLinkUrl;
+      }, CONFIG.redirectDelay);
+    }
+
+    /* ========================================
+       Route Handlers
+       ======================================== */
+    function handleMagicLink(params) {
+      const validation = validateToken(params.get('token'));
+
+      if (!validation.valid) {
+        renderUI({
+          title: 'Invalid Sign-in Link',
+          message: 'This sign-in link is invalid or has expired. Please request a new one from the app.',
+          buttonText: 'Go to Auden',
+          buttonUrl: CONFIG.mainSiteUrl,
+          buttonClass: 'error',
+          isError: true,
+        });
+        return;
+      }
+
+      const deepLinkUrl = buildMagicLinkDeepLink(validation.token);
+
+      renderUI({
+        title: 'Sign in to Auden',
+        message: 'Click the button below to open Auden and complete your sign-in.',
+        buttonText: 'Open Auden',
+        buttonUrl: deepLinkUrl,
+        showSpinner: true,
+        statusText: 'Opening Auden...',
+      });
+
+      attemptDeepLink(deepLinkUrl);
+    }
+
+    function handleLoginOAuth(provider, params) {
+      const providerValidation = validateProvider(provider);
+      if (!providerValidation.valid) {
+        renderUI({
+          title: 'Invalid Provider',
+          message: 'The authentication provider is not recognized.',
+          buttonText: 'Go to Auden',
+          buttonUrl: CONFIG.mainSiteUrl,
+          buttonClass: 'error',
+          isError: true,
+        });
+        return;
+      }
+
+      const validation = validateOAuthParams(params);
+
+      if (!validation.valid) {
+        renderUI({
+          title: 'Authorization Failed',
+          message: validation.error || 'The authorization request was invalid. Please try again.',
+          buttonText: 'Return to Auden',
+          buttonUrl: buildLoginOAuthErrorDeepLink(provider, validation.code || 'invalid_request', validation.error),
+          buttonClass: 'error',
+          isError: true,
+        });
+        return;
+      }
+
+      if (validation.isError) {
+        const deepLinkUrl = buildLoginOAuthErrorDeepLink(provider, validation.error, validation.errorDescription);
+
+        renderUI({
+          title: 'Authorization Failed',
+          message: validation.errorDescription,
+          buttonText: 'Return to Auden',
+          buttonUrl: deepLinkUrl,
+          buttonClass: 'error',
+          isError: true,
+        });
+
+        // Still attempt deep link to notify app of error
+        attemptDeepLink(deepLinkUrl);
+        return;
+      }
+
+      const deepLinkUrl = buildLoginOAuthDeepLink(provider, validation.code, validation.state);
+      const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
+
+      renderUI({
+        title: 'Authorization Successful',
+        message: `Your ${providerName} account has been authorized. Click below to return to Auden.`,
+        buttonText: 'Open Auden',
+        buttonUrl: deepLinkUrl,
+        showSpinner: true,
+        statusText: 'Opening Auden...',
+      });
+
+      attemptDeepLink(deepLinkUrl);
+    }
+
+    function handleCalendarOAuth(provider, params) {
+      const providerValidation = validateProvider(provider);
+      if (!providerValidation.valid) {
+        renderUI({
+          title: 'Invalid Provider',
+          message: 'The calendar provider is not recognized.',
+          buttonText: 'Go to Auden',
+          buttonUrl: CONFIG.mainSiteUrl,
+          buttonClass: 'error',
+          isError: true,
+        });
+        return;
+      }
+
+      const validation = validateOAuthParams(params);
+
+      if (!validation.valid) {
+        renderUI({
+          title: 'Connection Failed',
+          message: validation.error || 'The calendar connection request was invalid. Please try again.',
+          buttonText: 'Return to Auden',
+          buttonUrl: buildCalendarOAuthErrorDeepLink(provider, validation.code || 'invalid_request', validation.error),
+          buttonClass: 'error',
+          isError: true,
+        });
+        return;
+      }
+
+      if (validation.isError) {
+        const deepLinkUrl = buildCalendarOAuthErrorDeepLink(provider, validation.error, validation.errorDescription);
+
+        renderUI({
+          title: 'Connection Failed',
+          message: validation.errorDescription,
+          buttonText: 'Return to Auden',
+          buttonUrl: deepLinkUrl,
+          buttonClass: 'error',
+          isError: true,
+        });
+
+        // Still attempt deep link to notify app of error
+        attemptDeepLink(deepLinkUrl);
+        return;
+      }
+
+      const deepLinkUrl = buildCalendarOAuthDeepLink(provider, validation.code, validation.state);
+      const providerName = provider === 'google' ? 'Google Calendar' : 'Microsoft Outlook';
+
+      renderUI({
+        title: 'Calendar Connected',
+        message: `Your ${providerName} has been connected. Click below to return to Auden.`,
+        buttonText: 'Open Auden',
+        buttonUrl: deepLinkUrl,
+        showSpinner: true,
+        statusText: 'Opening Auden...',
+      });
+
+      attemptDeepLink(deepLinkUrl);
+    }
+
+    function handleLanding() {
+      // Redirect to main site after short delay
+      renderUI({
+        title: 'Auden Authentication',
+        message: 'This page handles authentication for Auden apps. Redirecting you to the main site...',
+        buttonText: 'Go to Auden',
+        buttonUrl: CONFIG.mainSiteUrl,
+        showSpinner: true,
+        statusText: 'Redirecting...',
+      });
+
+      setTimeout(() => {
+        window.location.href = CONFIG.mainSiteUrl;
+      }, 2000);
+    }
+
+    function handle404() {
+      renderUI({
+        title: 'Page Not Found',
+        message: 'The page you\'re looking for doesn\'t exist or the link may have expired.',
+        buttonText: 'Go to Auden',
+        buttonUrl: CONFIG.mainSiteUrl,
+        buttonClass: 'error',
+        isError: true,
+      });
+    }
+
+    /* ========================================
+       Router
+       ======================================== */
+    function route() {
+      const host = window.location.hostname;
+      const path = window.location.pathname;
+      const params = new URLSearchParams(window.location.search);
+
+      console.log(`[Auth Page] Routing: host=${host}, path=${path}`);
+
+      // Determine which domain we're on
+      const isAuthDomain = CONFIG.allowedAuthDomains.some(d => host.includes(d));
+      const isConnectDomain = CONFIG.allowedConnectDomains.some(d => host.includes(d));
+      const isLocalDev = host === 'localhost' || host === '127.0.0.1';
+
+      // Auth domain routes (or localhost for dev)
+      if (isAuthDomain || isLocalDev) {
+        // Magic link: /magic
+        if (path === '/magic') {
+          return handleMagicLink(params);
+        }
+
+        // Login OAuth: /oauth/google or /oauth/microsoft (auth domain uses /oauth for login)
+        const loginOAuthMatch = path.match(/^\/oauth\/(google|microsoft)\/?$/);
+        if (loginOAuthMatch) {
+          return handleLoginOAuth(loginOAuthMatch[1], params);
+        }
+
+        // Also support /auth/google and /auth/microsoft for login
+        const loginAuthMatch = path.match(/^\/auth\/(google|microsoft)\/?$/);
+        if (loginAuthMatch) {
+          return handleLoginOAuth(loginAuthMatch[1], params);
+        }
+      }
+
+      // Connect domain routes (or localhost for dev)
+      if (isConnectDomain || isLocalDev) {
+        // Calendar OAuth: /calendar/google or /calendar/microsoft
+        const calendarMatch = path.match(/^\/calendar\/(google|microsoft)\/?$/);
+        if (calendarMatch) {
+          return handleCalendarOAuth(calendarMatch[1], params);
+        }
+
+        // Also support legacy /oauth/provider/callback format for backwards compatibility
+        const legacyCalendarMatch = path.match(/^\/oauth\/(google|microsoft)\/callback\/?$/);
+        if (legacyCalendarMatch && isConnectDomain) {
+          return handleCalendarOAuth(legacyCalendarMatch[1], params);
+        }
+      }
+
+      // Landing page: / or empty
+      if (path === '/' || path === '') {
+        return handleLanding();
+      }
+
+      // 404 for everything else
+      return handle404();
+    }
+
+    /* ========================================
+       Initialize
+       ======================================== */
+    document.addEventListener('DOMContentLoaded', () => {
+      route();
+    });
+
+    // Also handle popstate for SPA-like behavior
+    window.addEventListener('popstate', () => {
+      route();
+    });
+  </script>
+</body>
+</html>

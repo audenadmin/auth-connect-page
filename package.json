@@ -1,0 +1,17 @@
+{
+  "name": "auden-auth-page",
+  "version": "1.0.0",
+  "description": "Unified authentication page for Auden apps",
+  "private": true,
+  "scripts": {
+    "dev": "node dev-server.js",
+    "start": "node dev-server.js",
+    "deploy:auth": "bash deploy/deploy.sh auth",
+    "deploy:connect": "bash deploy/deploy.sh connect",
+    "deploy:all": "bash deploy/deploy.sh all"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
