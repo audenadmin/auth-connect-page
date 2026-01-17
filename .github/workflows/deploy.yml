@@ -36,9 +36,9 @@ on:
           - connect
 
 env:
-  AWS_REGION: 'us-east-1'
+  AWS_REGION: 'eu-north-1'
   AUTH_BUCKET: 'auden-auth-page'
-  CONNECT_BUCKET: 'auden-connect-page'
+  CONNECT_BUCKET: 'auden-auth-page'
   AUTH_DISTRIBUTION: 'E28HU0FGXNYX2G'
   CONNECT_DISTRIBUTION: 'E5U1N58CFXWL1'
 
